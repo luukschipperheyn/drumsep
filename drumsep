@@ -1,15 +1,33 @@
 #!/bin/bash
+set -e
 if [ $# -ne 2 ]; then
+	echo 'Usage: drumsep "<PATH_IN>" "<PATH_OUT>"'
 	exit 1
 fi
 input=${1}
 output=${2}
+
+# resolve demucs runner
+if command -v demucs >/dev/null 2>&1; then
+	RUN_CMD=(demucs)
+elif command -v python3 >/dev/null 2>&1; then
+	RUN_CMD=(python3 -m demucs.separate)
+elif command -v python >/dev/null 2>&1; then
+	RUN_CMD=(python -m demucs.separate)
+else
+	echo "demucs not found. Run: bash drumsepInstall"
+	exit 1
+fi
+
+USE_ARGS=(--repo "model" -n 49469ca8)
+
 shopt -s nullglob
-if [ -d "$1" ]; then
-	for file in $input/*.{mp3,wav,ogg,flac}; do 
-    		demucs --repo "model" -o "$output" -n 49469ca8 "$file"
+if [ -d "$input" ]; then
+	for file in "$input"/*.{mp3,wav,ogg,flac}; do
+		[ -e "$file" ] || continue
+		"${RUN_CMD[@]}" -o "$output" "${USE_ARGS[@]}" "$file"
 	done
 else
-	demucs --repo "model" -o "$output" -n 49469ca8 "$input"
+	"${RUN_CMD[@]}" -o "$output" "${USE_ARGS[@]}" "$input"
 fi
 exit 0

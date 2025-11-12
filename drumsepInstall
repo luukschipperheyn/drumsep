@@ -1,17 +1,36 @@
 #!/bin/bash
+set -e
 if [ $# -ne 0 ]; then
+	echo 'Usage: bash drumsepInstall'
 	exit 1
 fi
-if [ "$(pip list | grep -F demucs)" == "" ]; then
-	pip install demucs
-fi
-if [ ! -d "model" ] && [ $? -eq 0 ]; then
-	mkdir "model"
-	cd "model"
-	if [ "$(pip list | grep -F gdown)" == "" ]; then
-		pip install gdown
+
+# pick a pip
+PIP="pip3"
+if ! command -v pip3 >/dev/null 2>&1; then
+	if command -v pip >/dev/null 2>&1; then
+		PIP="pip"
+	else
+		echo "pip/pip3 not found. Install Python 3 + pip first."
+		exit 1
 	fi
+fi
+
+# install demucs and gdown if missing
+if ! $PIP show demucs >/dev/null 2>&1; then
+	$PIP install --upgrade demucs
+fi
+if ! $PIP show gdown >/dev/null 2>&1; then
+	$PIP install --upgrade gdown
+fi
+
+# ensure model file exists
+mkdir -p "model"
+if [ ! -f "model/49469ca8.th" ]; then
+	cd "model"
 	gdown 1-Dm666ScPkg8Gt2-lK3Ua0xOudWHZBGC
 	cd ../
 fi
+
+echo "Install complete."
 exit 0
